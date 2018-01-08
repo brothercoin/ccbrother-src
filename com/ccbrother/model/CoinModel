@@ -1,0 +1,74 @@
+package com.hykj.ccbrother.model;
+
+import com.hykj.ccbrother.base.BaseModel;
+import java.util.Date;
+
+
+
+/**
+ * 币种表
+ * 
+ * @author innel
+ * @email 2638086622@qq.com
+ * @date 2017-11-08 08:55:32
+ */
+public class CoinModel extends BaseModel{
+	
+	//
+	private Integer id;
+	//
+	private Date createTime;
+	//币种名
+	private String name;
+	//简称
+	private String shortName;
+
+	/**
+	 * 设置：
+	 */
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	/**
+	 * 获取：
+	 */
+	public Integer getId() {
+		return id;
+	}
+	/**
+	 * 设置：
+	 */
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
+	/**
+	 * 获取：
+	 */
+	public Date getCreateTime() {
+		return createTime;
+	}
+	/**
+	 * 设置：币种名
+	 */
+	public void setName(String name) {
+		this.name = name;
+	}
+	/**
+	 * 获取：币种名
+	 */
+	public String getName() {
+		return name;
+	}
+	/**
+	 * 设置：简称
+	 */
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+	/**
+	 * 获取：简称
+	 */
+	public String getShortName() {
+		return shortName;
+	}
+}
