@@ -1,0 +1,198 @@
+package com.hykj.ccbrother.controller;
+
+import com.github.pagehelper.PageInfo;
+import com.hykj.ccbrother.base.AppBack;
+import com.hykj.ccbrother.base.RequiresRole;
+import com.hykj.ccbrother.config.Config;
+import com.hykj.ccbrother.model.GroupModel;
+import com.hykj.ccbrother.model.UserGroupModel;
+import com.hykj.ccbrother.service.GroupService;
+import com.hykj.ccbrother.service.UserGroupService;
+import io.rong.RongCloud;
+import io.rong.models.CodeSuccessResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author innel
+ * @email 2638086622@qq.com
+ * @date 2017-11-02 16:21:49
+ */
+@Controller
+@RequestMapping("/group")
+@ApiIgnore
+public class GroupController {
+
+    private Logger logger = Logger.getLogger(getClass());
+
+    @Autowired
+    private GroupService groupService;
+
+    @Autowired
+    private UserGroupService userGroupService;
+
+    /**
+     * 列表带分页
+     */
+    @RequestMapping("/listByPage")
+    @ResponseBody
+    @RequiresRole(role = "1")
+    public AppBack listByPage(@RequestParam Map<String, Object> params,
+                              int page) {
+        PageInfo<GroupModel> p = groupService.getList(params, page);
+        return new AppBack(p);
+    }
+
+
+//    /**
+//     * 列表
+//     */
+//    @RequestMapping("/list")
+//    @ResponseBody
+//    @RequiresRole(role = "1")
+//    public AppBack list(@ApiParam(value = "每页显示个数,不填默认10", required = false)
+//                        @RequestParam(required = false)
+//                                Integer pageSize,
+//
+//                        @ApiParam(value = "不填不分页", required = false)
+//                        @RequestParam(required = false)
+//                                Integer page) {
+//        Map params = new HashMap();
+//        params.put("pageSize", pageSize);
+//
+//        if (page == null) {
+//            return new AppBack(groupService.getList(params));
+//        }
+//        PageInfo<GroupModel> p = groupService.getList(params, page);
+//        return new AppBack(p);
+//    }
+
+    /**
+     * 列表
+     */
+    @RequestMapping("/list")
+    @ResponseBody
+    @RequiresRole(role = "1")
+    public AppBack list(@RequestParam Map<String, Object> params) {
+        return new AppBack(groupService.getList(params));
+    }
+
+
+    /**
+     * 信息
+     */
+    @RequestMapping("/info")
+    @ResponseBody
+    @RequiresRole(role = "1")
+    public AppBack info(int id) {
+        GroupModel group = groupService.getById(id);
+        return new AppBack(group);
+    }
+
+    /**
+     * 创建组群
+     * private String groupName;
+     * //群头像
+     * private String groupHead;
+     * menberIds 包含用户自己
+     */
+    @RequestMapping("/save")
+    @ResponseBody
+    @RequiresRole(role = "0,1")
+    @ApiOperation(
+            value = "创建组群",
+            notes = "要有 groupName，groupHead",
+            httpMethod = "POST")
+    public AppBack save(@ApiParam(value = "组名", required = true)
+                        @RequestParam
+                                String groupName,
+                        @ApiParam(value = "组头像")
+                        @RequestParam
+                                String groupHead,
+                        @ApiParam(value = "用户名")
+                        @RequestParam(required = false)
+                                Integer userId,
+                        String token,
+                        String memberIds) throws Exception {
+        GroupModel group = new GroupModel();
+        group.setGroupName(groupName);
+        group.setGroupName(groupHead);
+
+        group.setLeaderId(userId);
+        groupService.create(group);
+        String[] memberId = memberIds.split(",");
+        RongCloud rongCloud = RongCloud.getInstance(Config.rongAppKey, Config.rongAppSecret);
+        CodeSuccessResult groupJoinResult = rongCloud.group.create(memberId, group.getId() + "", group.getGroupName());
+        if (groupJoinResult.getCode() != 200) {
+            return new AppBack(-10, groupJoinResult.getErrorMessage());
+        }
+
+        UserGroupModel userGroup = new UserGroupModel();
+        userGroup.setGroupId(group.getId());
+        for (String o : memberId) {
+            userGroup.setUserId(Integer.valueOf(o));
+            userGroupService.create(userGroup);
+        }
+
+        return new AppBack(group);
+    }
+
+    /**
+     * 修改
+     * private String groupName;
+     * //群头像
+     * private String groupHead;
+     */
+    @RequestMapping("/update")
+    @ResponseBody
+    @RequiresRole(role = "0,1")
+    public AppBack update(GroupModel group) throws Exception {
+
+        GroupModel newGroup = new GroupModel();
+        newGroup.setGroupHead(group.getGroupHead());
+        newGroup.setGroupName(group.getGroupName());
+        newGroup.setId(group.getId());
+        groupService.update(newGroup);
+        RongCloud.getInstance().group.refresh(group.getId() + "", group.getGroupName());
+        return new AppBack();
+    }
+
+    /**
+     * 解散组群 所有用户都无法再接收该群的消息
+     */
+    @RequestMapping("/delete")
+    @ResponseBody
+    @RequiresRole(role = "0,1")
+    public AppBack delete(int id,
+                          int userId) throws Exception {
+
+        GroupModel groupModel = groupService.getById(id);
+        if (groupModel.getLeaderId() != userId) {
+            return new AppBack(-1, "您不是群主，不能解散该群", "no permisson");
+        }
+        // 解散群组方法。（将该群解散，所有用户都无法再接收该群的消息。）
+        RongCloud rongCloud = RongCloud.getInstance(Config.rongAppKey, Config.rongAppSecret);
+        CodeSuccessResult groupDismissResult = rongCloud.group.dismiss(userId + "", id + "");
+        if (groupDismissResult.getCode() != 200) {
+            return new AppBack(-1, groupDismissResult.getErrorMessage(), "fail");
+        }
+        groupService.deleteById(id);
+        Map condion = new HashMap();
+        condion.put("groupId", id);
+        userGroupService.delete(condion);
+        return new AppBack();
+    }
+
+
+}
