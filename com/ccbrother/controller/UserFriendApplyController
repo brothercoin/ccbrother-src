@@ -1,0 +1,168 @@
+package com.hykj.ccbrother.controller;
+
+import com.hykj.ccbrother.base.RequiresRole;
+import com.hykj.ccbrother.base.AppBack;
+import com.github.pagehelper.PageInfo;
+import com.hykj.ccbrother.base.AppBack;
+import com.hykj.ccbrother.model.*;
+import com.hykj.ccbrother.service.*;
+import io.rong.RongCloud;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
+
+import javax.validation.Valid;
+import java.util.*;
+
+/**
+ * 
+ * @author innel
+ * @email 2638086622@qq.com
+ * @date 2017-11-03 15:50:43
+ */
+@Controller
+@RequestMapping("/userfriendapply")
+@ApiIgnore
+public class UserFriendApplyController {
+
+    private Logger logger = Logger.getLogger(getClass());
+
+    @Autowired
+    private UserFriendApplyService userFriendApplyService;
+
+    @Autowired
+    private UserFriendService userFriendService;
+
+    /**
+     * 列表带分页
+     */
+    @RequestMapping("/listByPage")
+    @ResponseBody
+    @RequiresRole(role = "0,1")
+    public AppBack listByPage(@RequestParam Map<String, Object> params,
+                        int userId,
+                        int page) {
+        params.put("friendId",userId);
+        PageInfo<UserFriendApplyModel> p = userFriendApplyService.getList(params, page);
+        return new AppBack(p);
+    }
+
+    /**
+     * 列表
+     */
+    @RequestMapping("/list")
+    @ResponseBody
+    @RequiresRole(role = "0,1")
+    public AppBack list(@RequestParam Map<String, Object> params,
+                        int userId) {
+        params.put("friendId",userId);
+        return new AppBack(userFriendApplyService.getList(params));
+    }
+
+
+    /**
+     * 信息
+     */
+    @RequestMapping("/info")
+    @ResponseBody
+    @RequiresRole(role = "1")
+    public AppBack info(int id) {
+        UserFriendApplyModel userFriendApply = userFriendApplyService.getById(id);
+        return new AppBack(userFriendApply);
+    }
+
+    /**
+     * 申请好友
+     */
+    @RequestMapping("/save")
+    @ResponseBody
+    @RequiresRole(role = "0,1")
+    public AppBack save( @Valid UserFriendApplyModel userFriendApply,
+                         int userId) {
+        Map condion=new HashMap();
+        condion.put("applicantId",userId);
+        condion.put("friendId",userFriendApply.getFriendId());
+        userFriendApplyService.delete(condion);
+        condion.clear();
+        condion.put("userId",userId);
+        condion.put("friendId",userFriendApply.getFriendId());
+        if(userFriendService.getCount(condion)>0){
+            return new AppBack(-1,"已经是好友了");
+        }
+
+        userFriendApply.setApplicantId(userId);
+        userFriendApplyService.create(userFriendApply);
+        return new AppBack();
+    }
+
+
+    /**
+     * 同意申请好友
+     */
+    @RequestMapping("/agree")
+    @ResponseBody
+    @RequiresRole(role = "0")
+    public AppBack agree( int friendId,
+                         int userId) throws Exception {
+        Map condion=new HashMap();
+        condion.put("applicantId",friendId);
+        condion.put("friendId",userId);
+        if(userFriendApplyService.getCount(condion)==0){
+            return new AppBack(-1,"没有该好友的申请");
+        }
+        userFriendApplyService.delete(condion);
+        condion.put("applicantId",userId);
+        condion.put("friendId",friendId);
+        userFriendApplyService.delete(condion);
+
+        condion.clear();
+        condion.put("userId",userId);
+        condion.put("friendId",friendId);
+
+
+        if(userFriendService.getCount(condion)>0){
+            return new AppBack(-1,"已经是好友了");
+        }
+        UserFriendModel userFriendModel=new UserFriendModel();
+        userFriendModel.setFriendId(friendId);
+        userFriendModel.setUserId(userId);
+        userFriendService.create(userFriendModel);
+
+        userFriendModel.setFriendId(userId);
+        userFriendModel.setUserId(friendId);
+        userFriendService.create(userFriendModel);
+
+        RongCloud.getInstance().user.removeBlacklist(userId+"", friendId+"");
+        RongCloud.getInstance().user.removeBlacklist(friendId+"", userId+"");
+
+        return new AppBack();
+    }
+
+    /**
+     * 修改
+     */
+    @RequestMapping("/update")
+    @ResponseBody
+    @RequiresRole(role = "1")
+    public AppBack update( UserFriendApplyModel userFriendApply) {
+
+        UserFriendApplyModel newUserFriendApply=new UserFriendApplyModel();
+        newUserFriendApply.setId(userFriendApply.getId());
+        userFriendApplyService.update(newUserFriendApply);
+        return new AppBack();
+    }
+
+    /**
+     * 删除
+     */
+    @RequestMapping("/delete")
+    @ResponseBody
+    @RequiresRole(role = "1")
+    public AppBack delete(int id) {
+        userFriendApplyService.deleteById(id);
+        return new AppBack();
+    }
+
+}
