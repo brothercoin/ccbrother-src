@@ -1,0 +1,82 @@
+package com.hykj.ccbrother.task;
+
+import com.alibaba.fastjson.JSON;
+import com.hykj.ccbrother.model.CoinPlatModel;
+import com.hykj.ccbrother.model.TradingPlatformModel;
+import com.hykj.ccbrother.service.CoinPlatService;
+import com.hykj.ccbrother.service.Plat;
+import com.hykj.ccbrother.service.TradingPlatformService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.util.*;
+
+@Component
+public class ScheduledTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ScheduledTest.class);
+
+    @Autowired
+    Plat plat;
+
+    @Autowired
+    CoinPlatService coinPlatService;
+
+    @Autowired
+    TradingPlatformService tradingPlatformService;
+
+    private boolean isBatch(){
+        return true;
+    }
+
+   // @Scheduled(cron = "0/5 * *  * * ? ")   //每2秒执行一次
+    public void executeFileDownLoadTask() throws InterruptedException {
+      //  logger.info("获取最新行情");
+        Map condion=new HashMap();
+        condion.put("status",0);
+        List<TradingPlatformModel> platList = tradingPlatformService.getList(condion);
+
+        for(TradingPlatformModel tradingPlatformModel:platList){
+
+            condion.put("platId",tradingPlatformModel.getId());
+            List<CoinPlatModel> list = coinPlatService.getListLite(condion);
+            if(tradingPlatformModel.getIsAllTicker()==1){
+                plat.getAllTicker(list);
+            }
+        }
+       // logger.info("over");
+    }
+
+  //  @Scheduled(cron = "0/1 * *  * * ? ")   //每2秒执行一次
+    public void executeFileDownLoadTask2() throws InterruptedException {
+        int time=25;
+     //   logger.info("获取最新行情");
+        Map condion=new HashMap();
+        condion.put("status",0);
+        List<TradingPlatformModel> platList = tradingPlatformService.getList(condion);
+        List<CoinPlatModel> totalList=new ArrayList<>();
+        for(TradingPlatformModel tradingPlatformModel:platList){
+            condion.put("platId",tradingPlatformModel.getId());
+            List<CoinPlatModel> list = coinPlatService.getListLite(condion);
+            int size=list.size();
+            if(tradingPlatformModel.getIsAllTicker()==1){
+            }else {
+                totalList.addAll(list);
+            }
+        }
+        Collections.shuffle(totalList); // 混乱的意思
+        int last=time*1000/totalList.size();
+        for(CoinPlatModel coinPlatModel:totalList){
+            Thread.sleep(last);
+  //          logger.info("CoinPlatModel "+ JSON.toJSONString(coinPlatModel));
+            plat.getTicker(coinPlatModel);
+
+        }
+        logger.info("over");
+    }
+
+}
