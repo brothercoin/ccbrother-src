@@ -48,17 +48,15 @@ public class HuobiService implements PlatService {
 	public CoinPlatModel getTicker(CoinPlatModel coinPlatModel) {
 
 		String symbol = coinPlatModel.getSymbol();
-		String url = "https://api.huobi.pro/market/detail/merged";
-		Map map = new HashMap<>();
-		map.put("symbol", symbol.replace("-", ""));
-		String r = HttpUtil.get(url, map, getGetHeader());
+		String url = "https://api.huobi.pro/market/detail/merged?symbol=";
+		String r = HttpUtil.get(url + symbol, null, getGetHeader());
 		logger.debug(r);
-
+		JSONObject apiBack = JSON.parseObject(r);
+		
 		CoinPlatModel newCoinPlat = new CoinPlatModel();
 		newCoinPlat.setId(coinPlatModel.getId());
-		JSONObject apiBack = JSON.parseObject(r);
 		newCoinPlat.setTradingTime(new Date(apiBack.getLongValue("ts")));
-
+		
 		JSONObject tick = apiBack.getJSONObject("tick");
 		newCoinPlat.setBuy(tick.getJSONArray("bid").getBigDecimal(0));
 		newCoinPlat.setSell(tick.getJSONArray("ask").getBigDecimal(0));
@@ -86,7 +84,7 @@ public class HuobiService implements PlatService {
 
 		this.createSignature(apiKey, secret, "post", "api.huobi.pro",
 				"/v1/order/orders/place", params);
-		params.put("symbol", symbol.replace("-", ""));
+		params.put("symbol", symbol);
 		params.put("amount", amount);
 		params.put("price", price);
 		params.put("account-id", accountId);
@@ -101,7 +99,6 @@ public class HuobiService implements PlatService {
 		String resultx1 = HttpUtil.post(
 				"https://api.huobi.pro/v1/order/orders/place", params,
 				getPostHeader());
-		System.out.println(resultx1);
 		logger.debug("trade" + resultx1);
 		JSONObject resultx = JSON.parseObject(resultx1);
 		if ("ok".equals(resultx.getShort("ok"))) {
@@ -128,28 +125,31 @@ public class HuobiService implements PlatService {
 				"https://api.huobi.pro/v1/account/accounts/" + accountId
 						+ "/balance", params, getGetHeader());
 		logger.info("getUserInfo " + resltx);
-		System.out.println(resltx);
 		JSONObject appBack = JSON.parseObject(resltx);
 		if (!"ok".equals(appBack.getString("status"))) {
-			return null;
+			return userInfo;
 		}
 		JSONArray jsonArray = appBack.getJSONObject("data")
 				.getJSONArray("list");
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JSONObject coin = jsonArray.getJSONObject(i);
 			if ("trade".equals(coin.getString("type"))) {
-				CoinInfo coinInfo = new CoinInfo();
-				coinInfo.setName(coin.getString("currency"));
-				coinInfo.setAmount(new BigDecimal(coin.getString("balance")));
-				coinInfo.setPlatId(platId);
-				userInfo.getFreeCoinList().add(coinInfo);
+				if(coin.getBigDecimal("balance").compareTo(BigDecimal.ZERO)>0){
+					CoinInfo coinInfo = new CoinInfo();
+					coinInfo.setName(coin.getString("currency"));
+					coinInfo.setAmount(new BigDecimal(coin.getString("balance")));
+					coinInfo.setPlatId(platId);
+					userInfo.getFreeCoinList().add(coinInfo);
+				}
 			}
 			if ("frozen".equals(coin.getString("type"))) {
-				CoinInfo coinInfo = new CoinInfo();
-				coinInfo.setName(coin.getString("currency"));
-				coinInfo.setAmount(new BigDecimal(coin.getString("balance")));
-				coinInfo.setPlatId(platId);
-				userInfo.getFreezedCoinList().add(coinInfo);
+				if(coin.getBigDecimal("balance").compareTo(BigDecimal.ZERO)>0){
+					CoinInfo coinInfo = new CoinInfo();
+					coinInfo.setName(coin.getString("currency"));
+					coinInfo.setAmount(new BigDecimal(coin.getString("balance")));
+					coinInfo.setPlatId(platId);
+					userInfo.getFreezedCoinList().add(coinInfo);
+				}
 			}
 		}
 		return userInfo;
@@ -167,12 +167,12 @@ public class HuobiService implements PlatService {
 				params, getGetHeader());
 		logger.info("getUserInfo " + resltx);
 		JSONObject appBack = JSON.parseObject(resltx);
+		List<OrderInfo> orders = new ArrayList();
 		if (!"ok".equals(appBack.getString("status"))) {
-			return null;
+			return orders;
 		}
 
 		JSONArray jsonArray = appBack.getJSONArray("data");
-		List<OrderInfo> orders = new ArrayList();
 		for (int i = 0; i < jsonArray.size(); i++) {
 			JSONObject order = jsonArray.getJSONObject(i);
 			OrderInfo orderInfo = new OrderInfo();
@@ -220,7 +220,6 @@ public class HuobiService implements PlatService {
 		String resltx = HttpUtil.get("https://api.huobi.pro/v1/order/orders/"
 				+ orderId + "/submitcancel", params, getGetHeader());
 		logger.info(resltx);
-		System.out.println(resltx);
 		JSONObject appBack = JSON.parseObject(resltx);
 		if (!"ok".equalsIgnoreCase(appBack.getString("status"))) {
 			return new AppBack(-1, "撤销失败");
