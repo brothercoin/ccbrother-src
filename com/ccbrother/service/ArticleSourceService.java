@@ -9,4 +9,7 @@ import com.hykj.ccbrother.model.ArticleSourceModel;
 @Service
 public class ArticleSourceService extends BaseService<ArticleSourceModel, ArticleSourceMapper> {
 
+	 public ArticleSourceModel getTitleLast(int articleSourceId){
+	    return mapper.getTitleLast(articleSourceId);
+	 }
 }

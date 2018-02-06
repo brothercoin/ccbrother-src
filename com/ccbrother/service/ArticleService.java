@@ -7,6 +7,8 @@ import com.hykj.ccbrother.model.ArticleModel;
 import com.hykj.ccbrother.service.media.BitCoin86Service;
 import com.hykj.ccbrother.service.media.ChainforService;
 import com.hykj.ccbrother.service.media.JSCJService;
+import com.hykj.ccbrother.service.media.TradingNoticeService;
+import com.hykj.ccbrother.service.media.WallStreetService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,12 @@ public class ArticleService extends BaseService<ArticleModel, ArticleMapper> {
 	@Autowired
 	private BitCoin86Service bitCoin86Service;
 	
+	@Autowired
+	private TradingNoticeService tradingNoticeService;
+	
+	@Autowired
+	private WallStreetService wallStreetService;
+	
     @Override
     public ArticleModel change(ArticleModel model, Map condition) {
         model.setFacePhoto(Config.photoUrl(model.getFacePhoto()));
@@ -54,10 +62,24 @@ public class ArticleService extends BaseService<ArticleModel, ArticleMapper> {
     	return mapper.compareTime(map);
     }
     
+    public int getTitleCount(Map map){
+    	return mapper.getTitleCount(map);
+    }
+    
+    
+    //新闻资讯快讯
     public void statCatch(){
     	jinSeStat();
     	chainStat();
     	bitCoin86Stat();
+    	wallStreetService.starCatch();
+    	
+    }
+    
+  //抓取交易所公告
+    public void statcatchNotice(){
+    	tradingNoticeService.catchNotice();
+    	
     }
     
     //bitCoin86

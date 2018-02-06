@@ -290,11 +290,4 @@ public class OrderService extends BaseService<OrderModel, OrderMapper> {
     }
 
 
-    //创建时把订单等价的人民币价格与美元价格也保存进去（包含费率计算）
-    @Override
-    public boolean create(OrderModel model) {
-
-
-        return super.create(model);
-    }
 }
