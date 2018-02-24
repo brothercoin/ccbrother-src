@@ -71,9 +71,7 @@ public class ExchangeRateService extends BaseService<ExchangeRateModel, Exchange
         conditon.put("type", 1);
         conditon.put("status", 0);
         List<ExchangeRateModel> list = getList(conditon);
-        System.out.println(list.size());
         for (ExchangeRateModel exchangeRateModel : list) {
-            System.out.println(coinService.getById(exchangeRateModel.getTradeCoinId()).getShortName().toUpperCase());
             String scur = coinService.getById(exchangeRateModel.getTradeCoinId()).getShortName().toUpperCase();//获取左侧货币名字
             String tcur = coinService.getById(exchangeRateModel.getBaseCoinId()).getShortName().toUpperCase();//获取右侧名字
             String reString = sendUrl(scur, tcur);

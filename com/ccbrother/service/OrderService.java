@@ -22,6 +22,7 @@ import com.hykj.ccbrother.mapper.OrderMapper;
 import com.hykj.ccbrother.model.CoinPlatModel;
 import com.hykj.ccbrother.model.OrderModel;
 import com.hykj.ccbrother.model.TradingPlatformModel;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -219,6 +220,7 @@ public class OrderService extends BaseService<OrderModel, OrderMapper> {
         newOrder.setOrderStatus(-1);//直接设置为-1
         newOrder.setId(orderModel.getId());
         update(newOrder);
+        System.out.println("3-----"+newOrder.getOrderStatus());
 
     }
 
