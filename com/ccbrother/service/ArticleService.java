@@ -11,6 +11,8 @@ import com.hykj.ccbrother.service.media.TradingNoticeService;
 import com.hykj.ccbrother.service.media.WallStreetService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import us.codecraft.webmagic.Spider;
@@ -68,6 +70,7 @@ public class ArticleService extends BaseService<ArticleModel, ArticleMapper> {
     
     
     //新闻资讯快讯
+    @CacheEvict(value="article", allEntries=true)
     public void statCatch(){
     	jinSeStat();
     	chainStat();
@@ -76,7 +79,8 @@ public class ArticleService extends BaseService<ArticleModel, ArticleMapper> {
     	
     }
     
-  //抓取交易所公告
+    //抓取交易所公告
+    @CacheEvict(value="article", allEntries=true)
     public void statcatchNotice(){
     	tradingNoticeService.catchNotice();
     	

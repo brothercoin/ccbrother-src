@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 /**
  * 用户对各个交易平台的配置与授权
@@ -22,6 +23,12 @@ public class UserConfigPlatService extends BaseService<UserConfigPlatModel, User
 
     @Autowired
     TradingPlatformService tradingPlatformService;
+
+    @Override
+    protected UserConfigPlatModel change(UserConfigPlatModel model, Map condition) {
+        model.setPlatname(tradingPlatformService.getById(model.getPlatId()).getName());
+        return super.change(model, condition);
+    }
 
     public BigDecimal getBuyRate(UserConfigPlatModel userConfigPlatModel,
                                  int platId) {

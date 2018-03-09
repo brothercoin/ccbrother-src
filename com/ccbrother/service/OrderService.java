@@ -220,8 +220,6 @@ public class OrderService extends BaseService<OrderModel, OrderMapper> {
         newOrder.setOrderStatus(-1);//直接设置为-1
         newOrder.setId(orderModel.getId());
         update(newOrder);
-        System.out.println("3-----"+newOrder.getOrderStatus());
-
     }
 
     // 根据获取的订单失败

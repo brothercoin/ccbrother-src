@@ -35,6 +35,15 @@ public class CoinPlatService extends BaseService<CoinPlatModel, CoinPlatMapper> 
     @Override
     public CoinPlatModel change(CoinPlatModel model, Map condition) {
         model.setPlatName(tradingPlatformService.getById(model.getPlatId()).getName());
+        if(model.getLast()==null){//没有最新价
+            model.setLast(model.getBuy());
+        }
+        if(model.getBuy()==null){//没有最新价
+            model.setBuy(model.getLast());
+        }
+        if(model.getSell()==null){//没有最新价
+            model.setSell(model.getLast());
+        }
         return super.change(model, condition);
     }
 
