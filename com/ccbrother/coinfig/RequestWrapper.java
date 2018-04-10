@@ -22,7 +22,6 @@ public class RequestWrapper extends HttpServletRequestWrapper{
     
   //添加参数的方法
     public void addParameters(Map<String,Object> extraParams){
-    	System.out.println(22);
         for(Entry<String,Object> entry : extraParams.entrySet()){
             addParameters(entry.getKey(),entry.getValue());
         }
@@ -31,7 +30,6 @@ public class RequestWrapper extends HttpServletRequestWrapper{
     //这四个重写的方法是很重要的！！！只有重写了这四个方法，后续才能在这个request中获取到对应的参数
     @Override
     public String getParameter(String name){
-    	System.out.println(11);
         String[] values = params.get(name);
         if(values == null || values.length == 0){
             return null;
@@ -47,7 +45,6 @@ public class RequestWrapper extends HttpServletRequestWrapper{
 
     @Override
     public String[] getParameterValues(String name) {
-    	System.out.println(44);
         return params.get(name);
     }
 
@@ -55,7 +52,6 @@ public class RequestWrapper extends HttpServletRequestWrapper{
     //而且controller中的参数为javaBean时，bean中的属性将不会自动绑定
     @Override
     public Enumeration<String> getParameterNames(){
-    	System.out.println(55);
         Vector<String> nameList = new Vector<String>();
         for(Entry<String, String[]> entry: params.entrySet()){
             nameList.add(entry.getKey());
@@ -64,7 +60,6 @@ public class RequestWrapper extends HttpServletRequestWrapper{
     }
 
     public void addParameters(String name,Object value){
-    	System.out.println(66);
         if(null != value){
             if(value instanceof String[]){
                 params.put(name,(String[]) value);
