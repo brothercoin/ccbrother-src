@@ -44,7 +44,6 @@ public class LocalbitcoinsService implements PlatService {
 		logger.debug(url);
 		String r = HttpUtil.get(url, null);//访问可能会返回500状态码
 		logger.debug("getAllTicker" + r);
-		System.out.println(r);
 		JSONObject apiBack = JSON.parseObject(r);//会报一个错，但是下次访问还会正常显示
 		List newList = new ArrayList<CoinPlatModel>();
 		for (int i = 0; i < list.size(); i++) {
@@ -100,7 +99,8 @@ public class LocalbitcoinsService implements PlatService {
 		coinInfo.setName("btc");
 		coinInfo.setAmount(data.getJSONObject("total").getBigDecimal("balance"));
 		userInfo.getFreeCoinList().add(coinInfo);
-
+		
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 

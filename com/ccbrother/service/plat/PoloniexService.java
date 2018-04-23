@@ -93,6 +93,7 @@ public class PoloniexService implements  PlatService {
 		String params = "nonce=" + nonce + "&command=" + command + "&account=all";
 		Map<String, String> header = getHeader(apiKey, secret, params);
 		String r = HttpUtil.post(postUrl,params,header);
+		logger.info("getUserInfo:" + r);
 		UserInfo userInfo = new UserInfo();
 		if(r.contains("error")){
 			return userInfo;
@@ -115,6 +116,7 @@ public class PoloniexService implements  PlatService {
                 userInfo.getFreezedCoinList().add(coinInfo);
         	}
         }
+        userInfo.setPlatId(platId);
 		return userInfo;
     }
 

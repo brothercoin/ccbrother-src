@@ -170,14 +170,13 @@ public class KrakenService implements PlatService {
         Iterator<Map.Entry<String, String>> it = result.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = it.next();
-            System.out.println("key= " + entry.getKey() + " and value= " + entry.getValue());
             CoinInfo coinInfo = new CoinInfo();
             coinInfo.setName(entry.getKey());
             coinInfo.setAmount(new BigDecimal(entry.getValue()));
             coinInfo.setPlatId(platId);
             userInfo.getFreeCoinList().add(coinInfo);
         }
-
+        userInfo.setPlatId(platId);
         return userInfo;
 
     }

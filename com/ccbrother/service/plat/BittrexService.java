@@ -111,7 +111,7 @@ public class BittrexService implements PlatService {
         JSONObject apiBack = JSON.parseObject(r);
         Boolean success = apiBack.getBoolean("success");
         if (!success) {
-            throw new MsgException(apiBack.getString("message"));
+            return userInfo;
         }
         JSONArray result = apiBack.getJSONArray("result");
         for (int i = 0; i <result.size();i++){
@@ -133,6 +133,7 @@ public class BittrexService implements PlatService {
                 userInfo.getFreezedCoinList().add(fCoin);
             }
         }
+        userInfo.setPlatId(platId);
         return userInfo;
     }
 
@@ -152,14 +153,13 @@ public class BittrexService implements PlatService {
         logger.info("getOrderInfo " + r);
         JSONObject apiBack = JSON.parseObject(r);
         Boolean success = apiBack.getBoolean("success");
-        if (!success) {
-            throw new MsgException(apiBack.getString("message"));
-        }
         JSONArray orders = apiBack.getJSONArray("result");
-
+        
         List orderList = new ArrayList();
-
-
+        if (!success) {
+            return orderList;
+        }
+       
         for (int i = 0; i < orders.size(); i++) {
             JSONObject order = orders.getJSONObject(i);
             OrderInfo orderInfo = new OrderInfo();
@@ -215,7 +215,7 @@ public class BittrexService implements PlatService {
         JSONObject apiBack = JSON.parseObject(r);
         Boolean success = apiBack.getBoolean("success");
         if (!success) {
-            throw new MsgException(apiBack.getString("message"));
+            return new AppBack(-1,apiBack.getString("message"));
         }
         return new AppBack();
     }

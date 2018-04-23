@@ -28,8 +28,8 @@ public class HKSYService implements PlatService {
 		String symbol = coinPlatModel.getSymbol();//symbol是xxx-xxx格式，前者是要查的，后者是要支付的
 		String url = "http://openapi.hksy.com/app/coinMarket/v1/selectCoinMarketbyCoinName";
 		Map map = new HashMap<>();
-		map.put("coinName", symbol.split("-")[0]);//设置要查询的币种
-		map.put("payCoinName", symbol.split("-")[1]);//设置要支付的币种（价格单位币种）
+		map.put("coinName", symbol.split("_")[0]);//设置要查询的币种
+		map.put("payCoinName", symbol.split("_")[1]);//设置要支付的币种（价格单位币种）
 		String r = HttpUtil.get(url, map);
 		logger.debug(r);
 		CoinPlatModel newCoinPlat = new CoinPlatModel();

@@ -156,7 +156,6 @@ public class KucoinService implements PlatService {
 				"HmacSHA256", "UTF-8").toLowerCase();
 		Map header = getHeader(apiKey, signature, nonce);
 		String r = HttpUtil.get(url + endpoint, params, header);
-		System.out.println(r);
 		logger.info("getUserInfo " + r);
 		UserInfo userInfo = new UserInfo();
 		JSONObject apiBack = JSON.parseObject(r);
@@ -182,6 +181,7 @@ public class KucoinService implements PlatService {
 				userInfo.getFreezedCoinList().add(coinInfo);
 			}
 		}
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 

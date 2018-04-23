@@ -146,6 +146,7 @@ public class LivecoinService implements PlatService {
 				}
 			}
 		}
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 

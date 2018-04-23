@@ -70,11 +70,9 @@ public class GateService implements PlatService {
 		String r = HttpUtil.get(url, null);
 		logger.debug("getAllTicker" + r);
 		JSONObject apiBack = JSON.parseObject(r);
-		System.out.println(apiBack.size());
 		List<CoinPlatModel> newList = new ArrayList<CoinPlatModel>();
 		Map<String, CoinPlatModel> tempMap = new HashMap<>();
 		for (Map.Entry<String, Object> entry : apiBack.entrySet()) {
-			// System.out.println(entry.getKey() + ":" + entry.getValue());
 			String symbol = entry.getKey();
 			JSONObject result = apiBack.getJSONObject(symbol);
 			CoinPlatModel newCoinPlat = new CoinPlatModel();
@@ -118,7 +116,6 @@ public class GateService implements PlatService {
 		header.put("Key", apiKey);
 		header.put("Sign", sign);
 		String r = HttpUtil.post(url, params, header);
-		System.out.println(r);
 		logger.info("trade " + r);
 		JSONObject apiBack = JSON.parseObject(r);
 		if (!"true".equalsIgnoreCase(apiBack.getString("result"))) {
@@ -141,11 +138,11 @@ public class GateService implements PlatService {
 		String r = HttpUtil.post(url, params, header);
 		logger.info("getUserInfo " + r);
 		JSONObject apiBack = JSON.parseObject(r);
+		UserInfo userInfo = new UserInfo();
 		if (!apiBack.getBoolean("result")) {
-			return null;
+			return userInfo;
 		}
 		
-		UserInfo userInfo = new UserInfo();
 		Map free = apiBack.getJSONObject("available");
 		Iterator<Map.Entry<String, Object>> it = free.entrySet().iterator();//返回类型只能用obj接收
 		while (it.hasNext()) {
@@ -174,6 +171,7 @@ public class GateService implements PlatService {
 				userInfo.getFreezedCoinList().add(coinInfo);
 			}
 		}
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 
@@ -191,11 +189,11 @@ public class GateService implements PlatService {
 		String r = HttpUtil.post(url, params, header);
 		logger.info("getOrderInfo " + r);
 		JSONObject apiBack = JSON.parseObject(r);
+		List<OrderInfo> orderList = new ArrayList();
 		if (!apiBack.getBoolean("result")) {
-			throw new MsgException(apiBack.getString("message"));
+			return orderList;
 		}
 		JSONArray orders = apiBack.getJSONArray("orders");
-		List<OrderInfo> orderList = new ArrayList();
 		
 		for (int i = 0; i < orders.size(); i++) {
 			JSONObject order = orders.getJSONObject(i);

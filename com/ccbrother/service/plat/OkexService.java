@@ -12,6 +12,7 @@ import com.hykj.ccbrother.utils.HttpUtil;
 import com.hykj.ccbrother.utils.MD5;
 import com.hykj.ccbrother.utils.StringUtil;
 import com.okcoin.rest.MD5Util;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.util.*;
 /**
  * 国际站 apiKey:  4ccd9e4c-a2b7-4639-9b4f-2a18bd02afda
  * 国际站 secretKey:  D9BFA5239FA4B56BDF918235E11BECE6
+ * 必须用外网可以访问，内网用一般的代理也将连接不上服务器
  */
 @Service
 public class OkexService implements PlatService {
@@ -84,14 +86,18 @@ public class OkexService implements PlatService {
                 params.put("type", "sell");
                 break;
         }
-
+        
+        AppBack a = new AppBack();
+        logger.info("a-----" + JSON.toJSONString(a));
+        
         params.put("price", price.toString());
         params.put("amount", amount.toString());
-
-        String sign = MD5Util.buildMysignV1(params, secret);
+        
+        String paramStr = HttpUtil.sortMap(params);
+        String sign = MD5Util.buildMysignV1(paramStr, secret);
         params.put("sign", sign);
 
-        logger.info(JSON.toJSONString(params));
+        logger.info("b-----" + JSON.toJSONString(params));
         String r = HttpUtil.post(url, params);
         logger.info(r);
         JSONObject apiBack = JSON.parseObject(r);
@@ -100,10 +106,13 @@ public class OkexService implements PlatService {
             String error_code = apiBack.getString("error_code");
             return new AppBack(-1, "交易错误 错误编码: " + error_code);
         }
-        
-        JSONArray orderInfo = apiBack.getJSONArray("order_info");
-        String orderId = orderInfo.getJSONObject(0).getString("order_id");
-        return new AppBack().add("orderId", orderId);
+        logger.info("c-----" );
+        String orderId = apiBack.getString("order_id");
+        logger.info("d-----" );
+        logger.info("e-----" );
+        a.add("orderId", orderId);
+        logger.info("c-----" + JSON.toJSONString(a));
+        return a;
     }
 
     @Override
@@ -111,17 +120,20 @@ public class OkexService implements PlatService {
         String url = "https://www.okex.com/api/v1/userinfo.do";
 
         // 构造参数签名
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, Object> params = new HashMap<String, Object>();
         params.put("api_key", apiKey);
-        String sign = MD5Util.buildMysignV1(params, secret);
+        String paramStr = HttpUtil.sortMap(params);
+        String sign = MD5Util.buildMysignV1(paramStr, secret);
         params.put("sign", sign);
         logger.info(JSON.toJSONString(params));
-        String r = HttpUtil.post(url, params);
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("api_key", apiKey);
+        map.put("sign", sign);
+        String r = HttpUtil.post(url, map);
         logger.info(r);
         JSONObject apiBack = JSON.parseObject(r);
         UserInfo userInfo = new UserInfo();
         if (!apiBack.getBoolean("result")) {
-            logger.debug("获取失败 " + r);
             return userInfo;
         }
 
@@ -131,7 +143,6 @@ public class OkexService implements PlatService {
         Iterator<Map.Entry<String, String>> it = free.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = it.next();
-            System.out.println("key= " + entry.getKey() + " and value= " + entry.getValue());
             CoinInfo coinInfo = new CoinInfo();
             coinInfo.setName(entry.getKey());
             coinInfo.setAmount(new BigDecimal(entry.getValue()));
@@ -144,7 +155,6 @@ public class OkexService implements PlatService {
         it = freezed.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = it.next();
-            System.out.println("key= " + entry.getKey() + " and value= " + entry.getValue());
             CoinInfo coinInfo = new CoinInfo();
             coinInfo.setName(entry.getKey());
             coinInfo.setAmount(new BigDecimal(entry.getValue()));
@@ -153,6 +163,8 @@ public class OkexService implements PlatService {
                 userInfo.getFreezedCoinList().add(coinInfo);
             }
         }
+        userInfo.setPlatId(platId);
+        System.out.println("1111111------");
         return userInfo;
     }
 
@@ -191,6 +203,7 @@ public class OkexService implements PlatService {
      * @param symbol
      * @return
      */
+    //没有查到的数据也就是已经成功了，oke只能查未成交和部分成交的,已经成交和已经撤销的无法查到
     @Override
     public List<OrderInfo> getOrderInfo(String apiKey, String secret, Integer coinPlatId, String symbol) {
         String url = "https://www.okex.com/api/v1/order_info.do";
@@ -204,10 +217,10 @@ public class OkexService implements PlatService {
         String s1 = s + "&secret_key=" + secret;
         String sign = MD5.sign(s1, "UTF-8").toUpperCase();
         s += "&sign=" + sign;
-        logger.debug(s);
+        logger.info(s);
         Map<String, String> map = HttpUtil.getUrlParams(s);
         String r = HttpUtil.post(url, map);
-        logger.debug("获取结果 " + r);
+        logger.info("获取结果 " + r);
         JSONObject apiBack = JSON.parseObject(r);
         List orderList = new ArrayList();
         if (!apiBack.getBoolean("result")) {
@@ -217,8 +230,10 @@ public class OkexService implements PlatService {
         for (int i = 0; i < orders.size(); i++) {
             JSONObject order = orders.getJSONObject(i);
             OrderInfo orderInfo = new OrderInfo();
-            orderInfo.setAmount(order.getBigDecimal("amount"));
-            orderInfo.setCreateDate(new Date(order.getLong("create_data")));
+            System.out.println(order);
+            BigDecimal amount = order.getBigDecimal("amount");
+            orderInfo.setAmount(amount);
+            orderInfo.setCreateDate(new Date(order.getLong("create_date")));
             orderInfo.setCoinPlatId(coinPlatId);
             orderInfo.setSymbol(symbol);
             if ("buy".equals(order.getString("type"))) {
@@ -228,12 +243,18 @@ public class OkexService implements PlatService {
             }
             orderInfo.setSymbol(order.getString("symbol"));
             orderInfo.setPrice(order.getBigDecimal("price"));
-            orderInfo.setStatus(order.getInteger("status"));
+            BigDecimal dealAmount = order.getBigDecimal("deal_amount");
+            if(dealAmount.compareTo(amount) < 0){
+            	orderInfo.setStatus(1);
+            } if(dealAmount.compareTo(BigDecimal.ZERO) == 0){
+            	orderInfo.setStatus(0);
+            } 
             orderInfo.setDealAmount(order.getBigDecimal("deal_amount"));
             orderInfo.setOrderId(order.getString("order_id"));
             orderList.add(orderInfo);
 
         }
+        System.out.println(JSON.toJSONString(orderList)); 
         return orderList;
     }
 

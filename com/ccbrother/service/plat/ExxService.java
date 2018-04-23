@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import springfox.documentation.spring.web.json.Json;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -125,7 +127,7 @@ public class ExxService implements PlatService {
 
 	@Override
 	public UserInfo getUserInfo(String apiKey, String secret, int platId) {
-
+		System.out.println("1-----------");
 		String url = "https://trade.exx.com/api/getBalance?";
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("accesskey", apiKey);
@@ -134,15 +136,17 @@ public class ExxService implements PlatService {
 		String signature = Encrypt
 				.hmacEncrypt(s, secret, "HmacSHA512", "UTF-8").toLowerCase();
 		s += "&signature=" + signature;
+		System.out.println("s:" + s);
+		System.out.println("2----");
 		String r = HttpUtil.get(url + s, null);
+		System.out.println("3---------");
 		logger.info("getUserInfo " + r);
-		System.out.println(r);
 		JSONObject apiBack = JSON.parseObject(r);
+		UserInfo userInfo = new UserInfo();
 		if (apiBack.getString("code") != null) {
-			return null;
+			return userInfo;
 		}
 
-		UserInfo userInfo = new UserInfo();
 		Map funds = apiBack.getJSONObject("funds");
 		Iterator<Map.Entry<String, JSONObject>> it = funds.entrySet()
 				.iterator();
@@ -154,11 +158,16 @@ public class ExxService implements PlatService {
 			if (0 != coinInfo.getAmount().compareTo(BigDecimal.ZERO)) {
 				userInfo.getFreeCoinList().add(coinInfo);
 			}
-			if (0 != coinInfo.getAmount().compareTo(BigDecimal.ZERO)) {
+			BigDecimal freeze = entry.getValue().getBigDecimal("freeze");
+			if(freeze.compareTo(BigDecimal.ZERO) > 0){
+				coinInfo = new CoinInfo();
+				coinInfo.setName(entry.getKey());
+				coinInfo.setAmount(freeze);
 				userInfo.getFreezedCoinList().add(coinInfo);
 			}
 		}
-
+		userInfo.setPlatId(platId);
+		System.out.println(JSON.toJSONString(userInfo));
 		return userInfo;
 	}
 
@@ -189,11 +198,11 @@ public class ExxService implements PlatService {
 		String r2 = HttpUtil.get(url + s2, null);
 		logger.info("getOrderInfoSell " + r2);
 
+		List<OrderInfo> orderList = new ArrayList();
 		if (s1.contains("code") && s2.contains("code")) {//如果有记录返回的是array,没记录返回的时候JSONObj包含code等信息
-			return null;
+			return orderList;
 		}
 		
-		List<OrderInfo> orderList = new ArrayList();
 		JSONArray apiBack1 = null;
 		JSONArray apiBack2 = null;
 		if(!r1.contains("code")){

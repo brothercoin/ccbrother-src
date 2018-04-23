@@ -48,7 +48,7 @@ public class HuobiService implements PlatService {
 	public CoinPlatModel getTicker(CoinPlatModel coinPlatModel) {
 
 		String symbol = coinPlatModel.getSymbol();
-		String url = "https://api.huobi.pro/market/detail/merged?symbol=";
+		String url = "https://api.huobipro.com/market/detail/merged?symbol=";
 		String r = HttpUtil.get(url + symbol, null, getGetHeader());
 		logger.debug(r);
 		JSONObject apiBack = JSON.parseObject(r);
@@ -82,7 +82,7 @@ public class HuobiService implements PlatService {
 			return new AppBack(-1, "获取账号失败或您还没有开通此类型的账户");
 		}
 
-		this.createSignature(apiKey, secret, "post", "api.huobi.pro",
+		this.createSignature(apiKey, secret, "post", "api.huobipro.com",
 				"/v1/order/orders/place", params);
 		params.put("symbol", symbol);
 		params.put("amount", amount);
@@ -97,7 +97,7 @@ public class HuobiService implements PlatService {
 			break;
 		}
 		String resultx1 = HttpUtil.post(
-				"https://api.huobi.pro/v1/order/orders/place", params,
+				"https://api.huobipro.com/v1/order/orders/place", params,
 				getPostHeader());
 		logger.debug("trade" + resultx1);
 		JSONObject resultx = JSON.parseObject(resultx1);
@@ -119,10 +119,10 @@ public class HuobiService implements PlatService {
 		}
 		UserInfo userInfo = new UserInfo();
 
-		this.createSignature(apiKey, secret, "GET", "api.huobi.pro",
+		this.createSignature(apiKey, secret, "GET", "api.huobipro.com",
 				"/v1/account/accounts/" + accountId + "/balance", params);
 		String resltx = HttpUtil.get(
-				"https://api.huobi.pro/v1/account/accounts/" + accountId
+				"https://api.huobipro.com/v1/account/accounts/" + accountId
 						+ "/balance", params, getGetHeader());
 		logger.info("getUserInfo " + resltx);
 		JSONObject appBack = JSON.parseObject(resltx);
@@ -152,6 +152,7 @@ public class HuobiService implements PlatService {
 				}
 			}
 		}
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 
@@ -162,8 +163,8 @@ public class HuobiService implements PlatService {
 		Map params = new HashMap();
 		params.put("symbol", symbol);
 		params.put("states", "filled,canceled,partial-filled");
-		this.createSignature(apiKey,secret,"GET","api.huobi.pro","/v1/order/orders",params);
-		String resltx = HttpUtil.get("https://api.huobi.pro/v1/order/orders",
+		this.createSignature(apiKey,secret,"GET","api.huobipro.com","/v1/order/orders",params);
+		String resltx = HttpUtil.get("https://api.huobipro.com/v1/order/orders",
 				params, getGetHeader());
 		logger.info("getUserInfo " + resltx);
 		JSONObject appBack = JSON.parseObject(resltx);
@@ -216,8 +217,8 @@ public class HuobiService implements PlatService {
 		if(accountId == null){
 			return null;
 		}
-		this.createSignature(apiKey,secret,"POST","api.huobi.pro","/v1/order/orders/"+orderId+"/submitcancel",params);
-		String resltx = HttpUtil.get("https://api.huobi.pro/v1/order/orders/"
+		this.createSignature(apiKey,secret,"POST","api.huobipro.com","/v1/order/orders/"+orderId+"/submitcancel",params);
+		String resltx = HttpUtil.get("https://api.huobipro.com/v1/order/orders/"
 				+ orderId + "/submitcancel", params, getGetHeader());
 		logger.info(resltx);
 		JSONObject appBack = JSON.parseObject(resltx);
@@ -234,11 +235,11 @@ public class HuobiService implements PlatService {
 	 */
 	private String getAccessID(String apiKey, String secret) {
 		Map<String, String> params = new HashMap<String, String>();
-		this.createSignature(apiKey, secret, "get", "api.huobi.pro",
+		this.createSignature(apiKey, secret, "get", "api.huobipro.com",
 				"/v1/account/accounts", params);
 
 		String result = HttpUtil.get(
-				"https://api.huobi.pro/v1/account/accounts", params,
+				"https://api.huobipro.com/v1/account/accounts", params,
 				getGetHeader());
 		JSONObject result1 = JSON.parseObject(result);
 		JSONArray jsonArray = result1.getJSONArray("data");

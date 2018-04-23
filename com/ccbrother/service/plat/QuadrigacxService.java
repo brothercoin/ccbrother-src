@@ -154,6 +154,7 @@ public class QuadrigacxService implements  PlatService {
                 }
             }
         }
+        userInfo.setPlatId(platId);
         return userInfo;
 
     }

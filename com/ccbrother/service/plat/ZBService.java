@@ -44,7 +44,6 @@ public class ZBService implements PlatService {
 		String url = "http://api.zb.com/data/v1/ticker?market=";
 		String r = HttpUtil.get(url + symbol, null);
 		logger.debug(r);
-		System.out.println(r);
 		JSONObject appBack = JSON.parseObject(r);
 		if(appBack.getString("result") != null ){//这时候会提示服务端忙碌
 			return  null;
@@ -141,7 +140,7 @@ public class ZBService implements PlatService {
 				userInfo.getFreezedCoinList().add(coinInfo);
 			}
 		}
-
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 

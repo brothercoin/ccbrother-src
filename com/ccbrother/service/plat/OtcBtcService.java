@@ -138,6 +138,7 @@ public class OtcBtcService implements PlatService{
 				userInfo.getFreezedCoinList().add(coinInfo);
 			}
 		}
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 

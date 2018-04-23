@@ -107,10 +107,12 @@ public class HitbtcService implements PlatService {
 		logger.info("getUserInfo " + r);
 		JSONArray apiBack = JSON.parseArray(r);
 		UserInfo userInfo = new UserInfo();
-
+		if(apiBack == null && apiBack.size() == 0){
+			return userInfo;
+		}
+		
 		for (int i = 0; i < apiBack.size(); i++) {
 			JSONObject coin = apiBack.getJSONObject(i);
-
 			CoinInfo coinInfo = new CoinInfo();
 			coinInfo.setName(coin.getString("currency"));
 			coinInfo.setAmount(coin.getBigDecimal("available"));
@@ -128,6 +130,7 @@ public class HitbtcService implements PlatService {
 			}
 
 		}
+		userInfo.setPlatId(platId);
 		return userInfo;
 	}
 
@@ -147,12 +150,11 @@ public class HitbtcService implements PlatService {
 
 		logger.info("getOrderInfo " + r);
 		JSONArray orders = JSON.parseArray(r);
-
-		if (orders == null) {
-			return null;
-		}
-
 		List orderList = new ArrayList();
+		if (orders == null && orders.size() == 0) {
+			return orderList;
+		}
+		
 		for (int i = 0; i < orders.size(); i++) {
 
 			JSONObject order = orders.getJSONObject(i);
